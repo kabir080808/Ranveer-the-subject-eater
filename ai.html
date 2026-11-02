@@ -1,0 +1,251 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>My AI Twin</title>
+<style>
+:root{
+  --bg:#f4f5fb; --panel:#ffffff; --text:#1b1d2a; --muted:#6b6f85; --border:#dfe2ee;
+  --accent:#6a4cff; --accent-text:#ffffff; --me:#6a4cff; --me-text:#fff; --bot:#eceefa; --bot-text:#1b1d2a;
+  --danger:#d63a4a;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#11121a; --panel:#1a1c28; --text:#eceefa; --muted:#9a9eb8; --border:#2c2f42;
+    --accent:#8b72ff; --me:#7a5fff; --bot:#24273a; --bot-text:#eceefa; --danger:#ff6b7a;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#11121a; --panel:#1a1c28; --text:#eceefa; --muted:#9a9eb8; --border:#2c2f42;
+  --accent:#8b72ff; --me:#7a5fff; --bot:#24273a; --bot-text:#eceefa; --danger:#ff6b7a;
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--text);font:16px/1.45 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;display:flex;flex-direction:column}
+header{display:flex;align-items:center;gap:8px;padding:10px 16px;background:var(--panel);border-bottom:1px solid var(--border)}
+header h1{font-size:18px;margin:0;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+button{font:inherit;border:1px solid var(--border);background:var(--panel);color:var(--text);border-radius:10px;padding:8px 12px;cursor:pointer}
+button.primary{background:var(--accent);color:var(--accent-text);border-color:var(--accent)}
+button:disabled{opacity:.5;cursor:default}
+#chat{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:10px;max-width:820px;width:100%;margin:0 auto}
+.msg{max-width:85%;padding:10px 14px;border-radius:16px;white-space:pre-wrap;word-wrap:break-word}
+.msg.user{align-self:flex-end;background:var(--me);color:var(--me-text);border-bottom-right-radius:4px}
+.msg.model{align-self:flex-start;background:var(--bot);color:var(--bot-text);border-bottom-left-radius:4px}
+.msg.error{align-self:center;background:transparent;color:var(--danger);border:1px solid var(--danger);font-size:14px}
+.hint{color:var(--muted);text-align:center;margin:auto;padding:20px}
+form#send{display:flex;gap:8px;padding:12px 16px;background:var(--panel);border-top:1px solid var(--border)}
+form#send textarea{flex:1;resize:none;font:inherit;padding:10px 12px;border-radius:12px;border:1px solid var(--border);background:var(--bg);color:var(--text);max-height:140px}
+dialog{border:1px solid var(--border);border-radius:16px;background:var(--panel);color:var(--text);width:min(640px,calc(100vw - 32px));max-height:calc(100vh - 32px);padding:0}
+dialog::backdrop{background:rgba(0,0,0,.5)}
+.dlg{padding:18px;display:flex;flex-direction:column;gap:12px}
+.dlg h2{margin:0;font-size:20px}
+label{display:flex;flex-direction:column;gap:4px;font-weight:600;font-size:14px}
+label small{font-weight:400;color:var(--muted)}
+input,select,.dlg textarea{font:inherit;font-weight:400;padding:9px 11px;border-radius:10px;border:1px solid var(--border);background:var(--bg);color:var(--text);width:100%}
+.dlg textarea{min-height:70px;resize:vertical}
+.row{display:flex;gap:8px;align-items:flex-end}
+.row > *{flex:1}
+.actions{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
+.note{font-size:13px;color:var(--muted)}
+a{color:var(--accent)}
+@media (max-width:480px){header{padding:8px 10px;gap:6px}header button{padding:6px 8px;font-size:14px}header h1{font-size:16px}}
+</style>
+</head>
+<body>
+<header>
+  <h1 id="title">My AI Twin</h1>
+  <button id="btnMe" title="Edit your personality">About me</button>
+  <button id="btnKey" title="API key and model">Settings</button>
+  <button id="btnClear" title="Start a new chat">New chat</button>
+</header>
+
+<div id="chat"><p class="hint" id="hint">Fill in <b>About me</b>, add your key in <b>Settings</b>, then say hi to your AI twin.</p></div>
+
+<form id="send">
+  <textarea id="input" rows="1" placeholder="Type a message…" autocomplete="off"></textarea>
+  <button class="primary" id="btnSend" type="submit">Send</button>
+</form>
+
+<!-- Personality -->
+<dialog id="dlgMe"><form method="dialog" class="dlg" id="formMe">
+  <h2>About me</h2>
+  <p class="note">The AI uses this to talk like you. The more you write and the more honest it is, the better the copy.</p>
+  <label>Name <input name="name" placeholder="e.g. Kabir"></label>
+  <label>Age / where you're from <input name="about" placeholder="e.g. 13, Mumbai"></label>
+  <label>How do you talk?<small>Short or long messages? Slang, emojis, Hinglish, caps, jokes?</small>
+    <textarea name="style" placeholder="e.g. short messages, lots of 'bro' and 'lol', mix Hindi and English, roast my friends"></textarea></label>
+  <label>Your personality<small>Funny, chill, competitive, sarcastic, kind…?</small>
+    <textarea name="traits"></textarea></label>
+  <label>Things you love<small>Games, sports, shows, food, people…</small>
+    <textarea name="likes"></textarea></label>
+  <label>Things you hate <textarea name="dislikes" placeholder="e.g. homework 😤"></textarea></label>
+  <label>Catchphrases / words you always say <textarea name="phrases"></textarea></label>
+  <label>Example messages you've actually sent<small>Paste a few real ones. This helps the most.</small>
+    <textarea name="examples" style="min-height:100px"></textarea></label>
+  <label>Anything else it should know <textarea name="extra"></textarea></label>
+  <div class="actions"><button value="cancel" formnovalidate>Cancel</button><button class="primary" value="save">Save</button></div>
+</form></dialog>
+
+<!-- Settings -->
+<dialog id="dlgKey"><form method="dialog" class="dlg" id="formKey">
+  <h2>Settings</h2>
+  <label>Google AI Studio API key
+    <small>Get one free at <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">aistudio.google.com/apikey</a>. It is saved only in this browser. Never put it in the code or on GitHub.</small>
+    <input name="key" type="password" autocomplete="off" placeholder="AIza…"></label>
+  <div class="row">
+    <label>Model <select name="model" id="modelSel"></select></label>
+    <button type="button" id="btnModels" style="flex:0 0 auto">Load models</button>
+  </div>
+  <p class="note" id="modelNote">Press “Load models” after entering your key to see what your key can use.</p>
+  <label>Creativity <small>Lower = more consistent, higher = more random</small>
+    <input name="temp" type="range" min="0" max="2" step="0.1"></label>
+  <div class="actions"><button value="cancel" formnovalidate>Cancel</button><button class="primary" value="save">Save</button></div>
+</form></dialog>
+
+<script>
+(() => {
+  const DEFAULT_MODEL = 'gemini-2.5-flash';
+  const store = {
+    get(k, d){ try{ const v = localStorage.getItem(k); return v === null ? d : JSON.parse(v); }catch(e){ return d; } },
+    set(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} }
+  };
+  let me = store.get('twin.me', {});
+  let cfg = store.get('twin.cfg', { key:'', model:DEFAULT_MODEL, temp:1 });
+  let history = store.get('twin.history', []); // [{role:'user'|'model', text}]
+
+  const $ = id => document.getElementById(id);
+  const chat = $('chat'), input = $('input'), btnSend = $('btnSend');
+
+  function updateTitle(){ $('title').textContent = me.name ? `${me.name} (AI)` : 'My AI Twin'; }
+
+  function systemPrompt(){
+    const n = me.name || 'the user';
+    const parts = [
+      `You are an AI copy of ${n}. You ARE ${n}: talk exactly like them, in first person, with their personality, opinions and way of typing.`,
+      `Stay in character. Match their message length, slang, emojis and language mix. Don't sound like a formal assistant, and don't say "as an AI" unless someone sincerely asks whether you're an AI; if they do, be honest that you're an AI copy of ${n}.`,
+      `You are still smart: if someone asks a real question (homework, facts, advice), give a correct, helpful answer, but say it the way ${n} would.`,
+      `Never make up private details (addresses, passwords, phone numbers, school name). If you don't know something about ${n}'s life, dodge it in character.`,
+      `Keep it friendly and appropriate.`,
+      '', 'About me:'
+    ];
+    const f = [['Name','name'],['Age / from','about'],['How I talk','style'],['Personality','traits'],['Things I love','likes'],['Things I hate','dislikes'],['Catchphrases','phrases'],['Other info','extra']];
+    for (const [label,k] of f) if (me[k] && me[k].trim()) parts.push(`- ${label}: ${me[k].trim()}`);
+    if (me.examples && me.examples.trim()) parts.push('', 'Real messages I have sent (copy this style):', me.examples.trim());
+    return parts.join('\n');
+  }
+
+  function bubble(role, text){
+    const h = $('hint'); if (h) h.remove();
+    const d = document.createElement('div');
+    d.className = 'msg ' + role;
+    d.textContent = text;
+    chat.appendChild(d);
+    chat.scrollTop = chat.scrollHeight;
+    return d;
+  }
+  function render(){
+    chat.innerHTML = '';
+    if (!history.length){
+      const p = document.createElement('p'); p.className='hint'; p.id='hint';
+      p.innerHTML = (!me.name ? 'Fill in <b>About me</b> first. ' : '') + (!cfg.key ? 'Add your API key in <b>Settings</b>. ' : '') + 'Then say hi to your AI twin.';
+      chat.appendChild(p);
+    }
+    history.forEach(m => bubble(m.role, m.text));
+  }
+
+  async function ask(){
+    const text = input.value.trim();
+    if (!text) return;
+    if (!cfg.key){ openKey(); return; }
+    input.value = ''; autosize();
+    history.push({role:'user', text}); store.set('twin.history', history);
+    bubble('user', text);
+    const pending = bubble('model', '…');
+    btnSend.disabled = true;
+    try{
+      const body = {
+        systemInstruction: { parts: [{ text: systemPrompt() }] },
+        contents: history.slice(-40).map(m => ({ role:m.role, parts:[{text:m.text}] })),
+        generationConfig: { temperature: Number(cfg.temp) }
+      };
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(cfg.model || DEFAULT_MODEL)}:generateContent`;
+      const res = await fetch(url, { method:'POST', headers:{ 'Content-Type':'application/json', 'x-goog-api-key': cfg.key }, body: JSON.stringify(body) });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error?.message || `HTTP ${res.status}`);
+      const cand = data.candidates?.[0];
+      const reply = (cand?.content?.parts || []).map(p => p.text || '').join('').trim();
+      if (!reply) throw new Error(data.promptFeedback?.blockReason ? `Blocked: ${data.promptFeedback.blockReason}` : `No reply (${cand?.finishReason || 'unknown'})`);
+      pending.textContent = reply;
+      history.push({role:'model', text:reply}); store.set('twin.history', history);
+    }catch(err){
+      pending.remove();
+      history.pop(); store.set('twin.history', history);
+      chat.lastChild?.remove();
+      input.value = text; autosize();
+      bubble('error', 'Error: ' + err.message);
+    }finally{
+      btnSend.disabled = false; input.focus();
+    }
+  }
+
+  // Personality dialog
+  const formMe = $('formMe');
+  function openMe(){ for (const el of formMe.elements) if (el.name) el.value = me[el.name] || ''; $('dlgMe').showModal(); }
+  $('dlgMe').addEventListener('close', () => {
+    if ($('dlgMe').returnValue !== 'save') return;
+    me = {}; for (const el of formMe.elements) if (el.name) me[el.name] = el.value;
+    store.set('twin.me', me); updateTitle(); render();
+    if (!cfg.key) openKey();
+  });
+
+  // Settings dialog
+  const formKey = $('formKey'), sel = $('modelSel');
+  function setModelOptions(list, current){
+    sel.innerHTML = '';
+    const names = list.includes(current) ? list : [current, ...list];
+    for (const n of names){ const o = document.createElement('option'); o.value = o.textContent = n; sel.appendChild(o); }
+    sel.value = current;
+  }
+  function openKey(){
+    formKey.key.value = cfg.key || '';
+    formKey.temp.value = cfg.temp ?? 1;
+    setModelOptions(store.get('twin.models', [DEFAULT_MODEL]), cfg.model || DEFAULT_MODEL);
+    $('dlgKey').showModal();
+  }
+  $('btnModels').addEventListener('click', async () => {
+    const key = formKey.key.value.trim(), note = $('modelNote');
+    if (!key){ note.textContent = 'Enter your key first.'; return; }
+    note.textContent = 'Loading…';
+    try{
+      const res = await fetch('https://generativelanguage.googleapis.com/v1beta/models?pageSize=1000', { headers:{ 'x-goog-api-key': key } });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error?.message || `HTTP ${res.status}`);
+      const list = (data.models || [])
+        .filter(m => (m.supportedGenerationMethods || []).includes('generateContent') && /gemini/i.test(m.name) && !/embedding|image|tts|audio|live/i.test(m.name))
+        .map(m => m.name.replace(/^models\//, ''));
+      store.set('twin.models', list);
+      setModelOptions(list, list.includes(sel.value) ? sel.value : (list.find(n => /flash/.test(n) && !/lite/.test(n)) || list[0] || DEFAULT_MODEL));
+      note.textContent = `Your key works. ${list.length} models found.`;
+    }catch(e){ note.textContent = 'Could not load models: ' + e.message; }
+  });
+  $('dlgKey').addEventListener('close', () => {
+    if ($('dlgKey').returnValue !== 'save') return;
+    cfg = { key: formKey.key.value.trim(), model: sel.value || DEFAULT_MODEL, temp: Number(formKey.temp.value) };
+    store.set('twin.cfg', cfg); render();
+  });
+
+  $('btnMe').onclick = openMe;
+  $('btnKey').onclick = openKey;
+  $('btnClear').onclick = () => { if (!history.length || confirm('Start a new chat?')) { history = []; store.set('twin.history', history); render(); } };
+  $('send').addEventListener('submit', e => { e.preventDefault(); ask(); });
+  function autosize(){ input.style.height = 'auto'; input.style.height = Math.min(input.scrollHeight, 140) + 'px'; }
+  input.addEventListener('input', autosize);
+  input.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey){ e.preventDefault(); ask(); } });
+
+  updateTitle(); render();
+  if (!me.name) openMe(); else if (!cfg.key) openKey();
+})();
+</script>
+</body>
+</html>
