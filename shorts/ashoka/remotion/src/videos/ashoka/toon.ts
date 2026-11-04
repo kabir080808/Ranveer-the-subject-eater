@@ -16,7 +16,7 @@ const SH_FELT: C3 = [0.62, 0.62, 0.7];
 export type Build = "adult" | "stout" | "kid";
 export type Outfit = {
   jacket: string; pants: string; boots: string; hat?: string | null; belt?: string | null; buttons?: string; rifle?: boolean;
-  sash?: string; sword?: boolean; moustache?: string; skin?: string; head?: number; cap?: string; hair?: string; dress?: string;
+  sash?: string; sword?: boolean; spear?: boolean; jewel?: string; moustache?: string; skin?: string; head?: number; cap?: string; hair?: string; dress?: string;
   build?: Build;
 };
 type P2 = [number, number];
@@ -227,7 +227,7 @@ const DEF_LIGHT = rad(-120);
 
 // ---------------- faces ----------------
 export type Expr = "neutral" | "stern" | "grin" | "laugh" | "whistle" | "nervous" | "shock" | "relief" | "relief_open" | "dazed"
-  | "pained" | "smile" | "smile_closed" | "lick";
+  | "pained" | "smile" | "smile_closed" | "lick" | "sad";
 type EyeK = "dot" | "small" | "lid" | "slit" | "happy" | "dash" | "squeeze" | "shock" | "shockHalf" | "spiral";
 type MouthK = "dash" | "frown" | "smirk" | "smile" | "smileWide" | "grin" | "laugh" | "o" | "O" | "wave" | "teeth" | "lick";
 /** eyes [back, front], brows [inner, outer] offsets in u (+ = down), mouth kind */
@@ -246,6 +246,7 @@ const FACE: Record<Expr, { eye: [EyeK, EyeK]; brow: [number, number]; mouth: Mou
   smile: { eye: ["dot", "dot"], brow: [0, -1], mouth: "smirk" },
   smile_closed: { eye: ["happy", "happy"], brow: [0, -1], mouth: "smile" },
   lick: { eye: ["dot", "dot"], brow: [0, -1], mouth: "lick" },
+  sad: { eye: ["lid", "lid"], brow: [-6, 4], mouth: "frown" },
 };
 const halfLid = (k: EyeK): EyeK => (k === "dot" || k === "small" ? "lid" : k === "lid" ? "slit" : k === "shock" ? "shockHalf" : k);
 const eyeKind = (k: EyeK, lid: number): EyeK =>
@@ -412,6 +413,27 @@ const hatOn = (p: Pen, o: Outfit, hp: P2[], H: Blob, cx: number, hc: number, lig
     p.poly(body, null, ow);
     const [bx, by] = R([[cx, yb + 1 * u]])[0];
     p.ell(bx, by, 0.45 * W, 0.05 * HH, "#1d1b22", ow, 0, 360, (a * 180) / Math.PI);
+  } else if (o.hat === "turban") {
+    // wrapped turban: a stack of three soft rolls sitting low on the crown, a little knot in front
+    const col = o.cap ?? "#f2f0e6", yb = crown + 0.3 * HH;
+    const rolls: [number, number, number][] = [[yb - 0.02 * HH, 0.53, 0.13], [yb - 0.16 * HH, 0.49, 0.13], [yb - 0.29 * HH, 0.41, 0.12]];
+    for (const [y, rw, rh] of rolls) {
+      const [rx, ry] = R([[cx, y]])[0];
+      p.shadedFill(ellPts(rx, ry, rw * W, rh * HH, 0, 360, (a * 180) / Math.PI), col, mul(col, SH_FELT), light, rw * W, 0.35);
+      p.ell(rx, ry, rw * W, rh * HH, null, ow * 0.8, 0, 360, (a * 180) / Math.PI);
+    }
+    if (!side) { const [kx, ky] = R([[cx + 4 * u * (facing || 1), yb - 0.12 * HH]])[0]; p.ell(kx, ky, 8 * u, 10 * u, o.jewel ?? shade(col, 0.85), 2 * u); }
+  } else if (o.hat === "crown") {
+    // gold band with five points and a red jewel (Mauryan-style headdress, simplified)
+    const gold = "#e8c04a", yb = crown + 0.24 * HH, wb = 0.44 * W, hb = 0.13 * HH, pk = 0.2 * HH;
+    const pts: P2[] = [[cx - wb, yb], [cx - wb, yb - hb]];
+    for (let i = 0; i < 5; i++) { const x0 = cx - wb + (2 * wb * i) / 5, x1 = cx - wb + (2 * wb * (i + 1)) / 5; pts.push([(x0 + x1) / 2, yb - hb - pk * (i === 2 ? 1.3 : 1)], [x1, yb - hb]); }
+    pts.push([cx + wb, yb]);
+    const body = R(pts);
+    p.shadedFill(body, gold, "#b98a2a", light, wb, 0.4);
+    p.poly(body, null, ow);
+    const [jx, jy] = R([[cx, yb - 0.55 * hb]])[0];
+    p.ell(jx, jy, 7 * u, 7 * u, o.jewel ?? "#d2343c", 2 * u);
   } else if (o.hat === "bonnet") {
     const [bx, by] = R([[cx + (side ? 6 * u : 0), crown + 0.16 * HH]])[0];
     p.arc(bx, by, 0.5 * W, 0.2 * HH, 200, 340, 7 * u, BONNET_BRIM);
@@ -532,7 +554,12 @@ export const bodyFront = (p: Pen, o: Outfit, opts: FrontOpts) => {
   }
   const drawArm = (a: Arm) => { p.stroke(curve(a.pts[0], a.pts[1], a.pts[2]), 5.2 * u, armCol); p.dot(a.pts[2][0], a.pts[2][1], 5.5 * u); };
   // behind the body: rifle, sword, arms
-  if (rifle) {
+  if (rifle && o.spear) {
+    const tip = lerp2(R0, R1, 1.12);
+    p.band([R0, tip], "#8a5a33", 4 * u, 1.5 * u, "round");
+    const d = [tip[0] - R1[0], tip[1] - R1[1]], l = Math.hypot(d[0], d[1]), nx = -d[1] / l, ny = d[0] / l, bx = d[0] / l, by = d[1] / l;
+    p.poly([[tip[0] + bx * 34 * u, tip[1] + by * 34 * u], [tip[0] + nx * 8 * u, tip[1] + ny * 8 * u], [tip[0] - bx * 4 * u, tip[1] - by * 4 * u], [tip[0] - nx * 8 * u, tip[1] - ny * 8 * u]], "#c7ccd4", 2 * u);
+  } else if (rifle) {
     p.band([R0, R1], "#7a4b2a", 5 * u, 1.5 * u, "round");
     p.band([lerp2(R0, R1, 0.6), R1], "#8d949c", 2.4 * u, 1.2 * u, "round");
   }
@@ -710,7 +737,12 @@ export const bodySide = (p: Pen, o: Outfit, opts: SideOpts) => {
     if (!o.dress) for (let i = 0; i < 3; i++) { const y = chin + 0.16 * HH + i * 0.24 * HH; p.dot(tcx + 0.8 * T.a, y, 3 * u, INK); p.dot(tcx + 0.8 * T.a, y, 2.2 * u, o.buttons ?? shade(o.jacket, 0.7)); }
   });
   p.inkRing(tp, ow, thick);
-  if (rifle) {
+  if (rifle && o.spear) {
+    const tip = lerp2(B0, B1, 1.12);
+    p.band([B0, tip], "#8a5a33", 4 * u, 1.5 * u, "round");
+    const d = [tip[0] - B1[0], tip[1] - B1[1]], l = Math.hypot(d[0], d[1]) || 1, nx = -d[1] / l, ny = d[0] / l, bx = d[0] / l, by = d[1] / l;
+    p.poly([[tip[0] + bx * 34 * u, tip[1] + by * 34 * u], [tip[0] + nx * 8 * u, tip[1] + ny * 8 * u], [tip[0] - bx * 4 * u, tip[1] - by * 4 * u], [tip[0] - nx * 8 * u, tip[1] - ny * 8 * u]], "#c7ccd4", 2 * u);
+  } else if (rifle) {
     p.band([B0, B1], "#7a4b2a", 5 * u, 1.5 * u, "round");
     p.band([lerp2(B0, B1, 0.6), B1], "#8d949c", 2.4 * u, 1.2 * u, "round");
   }
@@ -907,3 +939,24 @@ export const fxBlob = (p: Pen, col: string) => {
   for (const [r, k] of [[0, 0], [0.5, 0.04], [0.64, 0.18], [0.76, 0.42], [0.87, 0.72], [0.95, 0.92], [1, 1]] as const) gr.addColorStop(r, mix(col, WHITE, k));
   g.fillStyle = gr; g.fillRect(0, 0, 128, 128);
 };
+
+// ---------------- the Ashoka cast (our own designs) ----------------
+export const ASHOKA: Outfit = { jacket: "#6a3fa0", pants: "#f1e6c8", boots: "#8a5a33", hat: "crown", sash: "#e8c04a", buttons: "#e8c04a", moustache: "#2a1d18", sword: true, skin: "#d9a273", build: "stout" };
+export const ASHOKA_CALM: Outfit = { ...ASHOKA, sword: false };
+const INDSKIN = ["#d9a273", "#c98d5e", "#e3b58a", "#b77b4e"];
+/** Mauryan footsoldier: saffron tunic, white turban, spear */
+export const mauryan = (v = 0): Outfit => ({ jacket: ["#e58a2e", "#d97a26", "#eb9640", "#e08330"][v % 4], pants: "#f4efe2", boots: "#7a4b2a", hat: "turban", cap: "#f6f2e6",
+  belt: "#8a5a33", rifle: true, spear: true, skin: INDSKIN[v % 4], moustache: v % 2 ? "#2a1d18" : undefined, buttons: "#f6e7b0" });
+/** Kalinga defender: teal tunic, indigo turban, spear */
+export const kalinga = (v = 0): Outfit => ({ jacket: ["#2f8f8a", "#2a7f85", "#349a8c", "#2b8790"][v % 4], pants: "#e9e4d6", boots: "#5a3b2a", hat: "turban", cap: "#3d4f9a",
+  belt: "#5a3b2a", rifle: true, spear: true, skin: INDSKIN[(v + 1) % 4], moustache: v % 2 ? undefined : "#2a1d18", buttons: "#dfe8e6" });
+/** captive / villager / traveller (no weapons) */
+export const villager = (v = 0): Outfit => {
+  const col = ["#c25a3c", "#3f6fb5", "#d9a441", "#5d7a3a", "#a04a7a", "#2f7f7a"][v % 6];
+  const o: Outfit = { jacket: col, pants: "#efe8d8", boots: "#6a4a30", skin: INDSKIN[v % 4] };
+  if (v % 3 === 1) return { ...o, hat: "hair", hair: "#1e1714", dress: ["#d84a6a", "#e2a33a", "#3f8fb5"][v % 3] };
+  return { ...o, hat: v % 2 ? "turban" : "hair", cap: ["#f2f0e6", "#e0b84a", "#c2453c"][v % 3], hair: "#1e1714", moustache: v % 4 === 0 ? "#2a1d18" : undefined };
+};
+export const CARVER: Outfit = { jacket: "#b5653f", pants: "#e9e2cf", boots: "#5a3b2a", hat: "turban", cap: "#e9e2cf", skin: "#c98d5e", moustache: "#2a1d18" };
+export const COOK: Outfit = { jacket: "#f4efe2", pants: "#d8cdb0", boots: "#6a4a30", hat: "turban", cap: "#d2343c", skin: "#b77b4e", build: "stout", moustache: "#2a1d18" };
+export const HEALER: Outfit = { jacket: "#3d8a5a", pants: "#efe8d8", boots: "#6a4a30", hat: "hair", hair: "#e9e4dc", skin: "#c98d5e", dress: "#3d8a5a" };
