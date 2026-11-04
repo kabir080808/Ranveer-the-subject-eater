@@ -377,7 +377,7 @@ export const stage = (id: number, t: number, cam: CamInfo): Stage => {
       debris(out);
       if (s.beat === "conqueror") {
         const [hx, hy, hz] = HERO_FIELD;
-        const expr: Expr = before(t, 27.7) ? "stern" : before(t, CUE.sick) ? "shock" : "pained";
+        const expr: Expr = before(t, 27.7) ? "stern" : before(t, CUE.sick) ? "sad" : "pained";
         human(cam, out, t, 1, ASHOKA, "ashoka", hx, hy, hz, { expr });
         if (!before(t, CUE.sick)) out.fx.push({ key: "sweat", cw: 128, ch: 128, draw: fxSweat, x: hx + 0.32, y: hy + 1.95 - 0.1 * clamp01((t - CUE.sick) * 2), z: hz + 0.2, w: 0.14, h: 0.14 });
       }
@@ -424,7 +424,7 @@ export const stage = (id: number, t: number, cam: CamInfo): Stage => {
     }
     case "fridge": {
       const [fx, , fz] = FRIDGE;
-      const kx = -2.6 + Math.min(2.2, 1.3 * Math.max(0, t - 49.4)), kidWalk = t > 49.4 && kx < 2.2 - 2.6 + 2.19;
+      const kx = -1.5 + Math.min(1.1, 0.9 * Math.max(0, t - 49.4)), kidWalk = t > 49.4 && kx < -0.41;
       human(cam, out, t, 1, KID, "kid", fx + kx - 0.15, 0, fz + 1.05, { expr: before(t, CUE.reads) ? "smile" : "grin", look: kidWalk ? 0 : 1 }, kidWalk ? { dx: 1, dz: 0, speed: 1.6 } : undefined);
       const px = 2.8 - Math.min(2.0, 1.4 * Math.max(0, t - CUE.walks + 0.2)), parWalk = t > CUE.walks - 0.2 && px > 0.81;
       if (t > CUE.walks - 0.8) human(cam, out, t, 2, PARENT, "parent", fx + px, 0, fz + 1.35, { expr: before(t, CUE.reads) ? "neutral" : "smile_closed", look: parWalk ? 0 : -1 }, parWalk ? { dx: -1, dz: 0, speed: 1.2 } : undefined);
@@ -463,10 +463,15 @@ export const stage = (id: number, t: number, cam: CamInfo): Stage => {
 
 /** what a battle leaves on the field: shields, broken spears, helmets and fallen banners lying in the grass (no people) */
 const debris = (out: Stage) => {
-  for (let i = 0; i < 70; i++) {
-    const k = i % 3, [x, , z] = at("plain", (hh(i, 20) - 0.5) * 40, 0, 10 - hh(i, 21) * 50);
+  for (let i = 0; i < 130; i++) {
+    const near = i < 50, k = i % 3, [x, , z] = near ? at("plain", (hh(i, 20) - 0.5) * 14, 0, 12 - hh(i, 21) * 16) : at("plain", (hh(i, 20) - 0.5) * 44, 0, 10 - hh(i, 21) * 55);
     if (Math.abs(x - HERO_FIELD[0]) < 1.4 && Math.abs(z - HERO_FIELD[2]) < 1.4) continue;
-    out.fx.push({ key: `debris${k}`, cw: 512, ch: 512, draw: (p) => fxDebris(p, k), x, y: 0.02 + (i % 5) * 0.002, z, w: 0.9, h: 0.9, flat: true, rot: hh(i, 22) * 6.28 });
+    out.fx.push({ key: `debris${k}`, cw: 512, ch: 512, draw: (p) => fxDebris(p, k), x, y: 0.02 + (i % 5) * 0.002, z, w: 1.1, h: 1.1, flat: true, rot: hh(i, 22) * 6.28 });
+  }
+  for (let i = 0; i < 26; i++) {
+    const [x, , z] = at("plain", (hh(i, 40) - 0.5) * 18, 0, 12 - hh(i, 41) * 30);
+    if (Math.abs(x - HERO_FIELD[0]) < 1.2 && Math.abs(z - HERO_FIELD[2]) < 1.2) continue;
+    out.fx.push({ key: "debris1", cw: 512, ch: 512, draw: (p) => fxDebris(p, 1), x, y: 0.55, z, w: 1.3, h: 1.3, rot: 0.6 + (hh(i, 42) - 0.5) * 0.9 });
   }
   for (let i = 0; i < 12; i++) {
     const [x, , z] = at("plain", (hh(i, 30) - 0.5) * 30, 0, 6 - hh(i, 31) * 40);

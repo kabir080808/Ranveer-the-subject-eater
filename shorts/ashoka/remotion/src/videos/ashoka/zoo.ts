@@ -198,9 +198,9 @@ export const glyphs = (g: CanvasRenderingContext2D, rows: number, cols: number, 
     g.beginPath();
     // simple Brahmi-like strokes: verticals, hooks, crosses, little circles
     if (v % 4 === 0) { g.moveTo(cx, cy - s); g.lineTo(cx, cy + s); g.moveTo(cx - s * 0.7, cy - s * 0.2); g.lineTo(cx + s * 0.7, cy - s * 0.2); }
-    else if (v % 4 === 1) { g.arc(cx, cy, s * 0.6, 0, Math.PI * 2); g.moveTo(cx, cy - s * 0.6); g.lineTo(cx, cy - s * 1.1); }
-    else if (v % 4 === 2) { g.moveTo(cx - s * 0.6, cy - s); g.lineTo(cx - s * 0.6, cy + s * 0.4); g.quadraticCurveTo(cx, cy + s, cx + s * 0.6, cy + s * 0.4); g.lineTo(cx + s * 0.6, cy - s); }
-    else { g.moveTo(cx - s * 0.7, cy + s); g.lineTo(cx, cy - s); g.lineTo(cx + s * 0.7, cy + s); g.moveTo(cx - s * 0.4, cy + s * 0.2); g.lineTo(cx + s * 0.4, cy + s * 0.2); }
+    else if (v % 4 === 1) { g.moveTo(cx + s * 0.5, cy - s); g.lineTo(cx - s * 0.5, cy - s); g.lineTo(cx - s * 0.5, cy + s); g.lineTo(cx + s * 0.5, cy + s); g.moveTo(cx - s * 0.5, cy); g.lineTo(cx + s * 0.2, cy); }
+    else if (v % 4 === 2) { g.moveTo(cx, cy - s); g.lineTo(cx, cy + s * 0.2); g.moveTo(cx - s * 0.6, cy + s * 0.2); g.quadraticCurveTo(cx, cy + s * 1.3, cx + s * 0.6, cy + s * 0.2); g.moveTo(cx + s * 0.55, cy - s * 0.7); g.arc(cx + s * 0.55, cy - s * 0.8, s * 0.12, 0, 7); }
+    else { g.moveTo(cx - s * 0.6, cy - s); g.lineTo(cx - s * 0.6, cy + s); g.moveTo(cx - s * 0.6, cy); g.lineTo(cx + s * 0.5, cy); g.lineTo(cx + s * 0.5, cy - s * 0.8); }
     g.stroke();
   }
 };

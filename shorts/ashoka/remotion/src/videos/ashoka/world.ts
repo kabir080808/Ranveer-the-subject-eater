@@ -38,6 +38,13 @@ const dirtTex = () => ctex("dirt", 1024, 1024, (g, r) => {
   for (let i = 0; i < 260; i++) { g.fillStyle = r() < 0.5 ? "rgba(176,138,96,0.35)" : "rgba(222,190,146,0.35)"; g.beginPath(); g.ellipse(r() * 1024, r() * 1024, 20 + r() * 60, 10 + r() * 30, r() * 3, 0, 7); g.fill(); }
   for (let i = 0; i < 90; i++) { g.fillStyle = "rgba(120,90,60,0.5)"; g.beginPath(); g.arc(r() * 1024, r() * 1024, 3 + r() * 5, 0, 7); g.fill(); }
 });
+/** weathered boulder: warm grey with soft lichen blotches and a few thin cracks (no masonry joints) */
+const rockTex = () => ctex("rockPlain", 1024, 1024, (g, r) => {
+  g.fillStyle = "#b8ad9c"; g.fillRect(0, 0, 1024, 1024);
+  for (let i = 0; i < 300; i++) { g.fillStyle = ["rgba(160,150,135,0.35)", "rgba(206,198,184,0.35)", "rgba(150,160,120,0.18)"][i % 3]; g.beginPath(); g.ellipse(r() * 1024, r() * 1024, 20 + r() * 80, 12 + r() * 50, r() * 3, 0, 7); g.fill(); }
+  g.strokeStyle = "rgba(90,80,70,0.45)"; g.lineWidth = 3;
+  for (let i = 0; i < 14; i++) { let x = r() * 1024, y = r() * 1024; g.beginPath(); g.moveTo(x, y); for (let k = 0; k < 6; k++) { x += (r() - 0.5) * 90; y += 20 + r() * 50; g.lineTo(x, y); } g.stroke(); }
+});
 const sandTex = () => ctex("sand", 1024, 1024, (g, r) => {
   g.fillStyle = "#ead39c"; g.fillRect(0, 0, 1024, 1024);
   for (let i = 0; i < 200; i++) { g.fillStyle = r() < 0.5 ? "rgba(214,186,130,0.4)" : "rgba(246,226,180,0.4)"; g.beginPath(); g.ellipse(r() * 1024, r() * 1024, 30 + r() * 70, 8 + r() * 20, 0, 0, 7); g.fill(); }
@@ -134,7 +141,7 @@ export class World {
     const cob = lam("cobbleHD", () => ({ map: cobbleHD() }));
     const sandstone = lam("sandstone", () => ({ map: stoneHD("sandstoneHD", ["#e4cfa6", "#dcc59a", "#ead7b2", "#d6be92"], "#b49c74") }));
     const polished = twoTone(new THREE.MeshPhongMaterial({ color: "#e6d2a8", specular: "#6a5a40", shininess: 40 }));
-    const rockM = lam("rock", () => ({ map: stoneHD("rockHD", ["#b9ad9a", "#ada190", "#c3b8a6", "#a59a88"], "#8d8272") }));
+    const rockM = lam("rock", () => ({ map: rockTex() }));
     const wallOchre = col("ochre", "#e0b070"), wallCream = col("cream", "#efe0bf"), terracotta = col("terracotta", "#c8643c");
     const wood = col("wood", "#8a5a33"), woodDark = col("woodDark", "#6a4226"), mud = col("mud", "#c99a6a");
     const thatch = lam("thatch", () => ({ map: thatchTex() }));
@@ -142,7 +149,7 @@ export class World {
     const leaf = [col("leafA", "#5ea84a"), col("leafB", "#4f9a44"), col("leafC", "#6cb653")];
     const banyanLeaf = [col("bleafA", "#4f9a44"), col("bleafB", "#5aa64c")];
     const palmLeaf = col("palm", "#5aa64c");
-    const copper = twoTone(new THREE.MeshPhongMaterial({ color: "#c9733a", specular: "#ffcf9a", shininess: 50 }));
+    const copper = twoTone(new THREE.MeshPhongMaterial({ color: "#e08a45", specular: "#ffd9a8", shininess: 50 }));
     const white = col("white", "#f2f0ea"), teal = col("roomWall", "#9fd0c8"), counter = col("counter", "#c9a27a");
     const hillMat = col("hill", "#7fae5a"), farHill = col("farhill", "#8fb06a");
     const crop = [col("cropA", "#a7c95a"), col("cropB", "#e2c24a"), col("cropC", "#7fb84f")];
@@ -222,7 +229,7 @@ export class World {
         const y = hillY(x, z);
         b.add(new THREE.CylinderGeometry(0.06, 0.06, 4.6, 8), wood, M4(ox + x, y + 2.3, oz + z));
         const fl = new THREE.PlaneGeometry(1.4, 0.9); fl.translate(0.7, 0, 0);
-        b.add(fl, col("bannerSaffron", "#e58a2e"), M4(ox + x + 0.06, y + 4.1, oz + z, 1, 1, 1, 0.4));
+        const bm = new THREE.Mesh(fl, new THREE.MeshBasicMaterial({ color: "#d9782a", side: THREE.DoubleSide })); bm.position.set(ox + x + 0.06, y + 4.1, oz + z); bm.rotation.y = 0.4; R.add(bm);
       }
       ring("hill", 40, 30, 70, 11, (x, z, i) => tree(x, z, 0.9 + rnd(i, 3) * 0.5, i));
     }
@@ -233,9 +240,8 @@ export class World {
       b.add(boxGeo(V(ox - 14, 0, oz - 12), V(ox + 14, 4.2, oz + 10), 2), sandstone);
       for (let k = 0; k < 6; k++) b.add(boxGeo(V(ox - 3, 0, oz + 10 + k * 0.6), V(ox + 3, 4.2 - k * 0.7, oz + 10.6 + k * 0.6), 1), sandstone); // steps
       for (let ix = 0; ix < 6; ix++) for (let iz = 0; iz < 3; iz++) b.add(new THREE.CylinderGeometry(0.32, 0.38, 5, 14), polished, M4(ox - 10 + ix * 4, 6.7, oz - 9 + iz * 3));
-      b.add(boxGeo(V(ox - 11.5, 9.2, oz - 10.5), V(ox + 11.5, 9.9, oz - 1.5)), woodDark);
       const vault = new THREE.CylinderGeometry(4.6, 4.6, 23, 24, 1, false, 0, Math.PI); vault.rotateZ(Math.PI / 2); vault.rotateX(-Math.PI / 2);
-      b.add(vault, terracotta, M4(ox, 9.9, oz - 6, 1, 0.45, 1));
+      b.add(vault, terracotta, M4(ox, 9.2, oz - 6, 1, 0.45, 1));
       for (const [x, z] of [[-12, 7], [12, 7], [-12, -11], [12, -11]]) {
         for (const dx of [-1, 1]) for (const dz of [-1, 1]) b.add(new THREE.CylinderGeometry(0.12, 0.12, 2.6, 8), polished, M4(ox + x + dx * 0.9, 5.5, oz + z + dz * 0.9));
         b.add(new THREE.SphereGeometry(1.5, 20, 10, 0, Math.PI * 2, 0, Math.PI / 2), terracotta, M4(ox + x, 6.8, oz + z));
@@ -279,8 +285,8 @@ export class World {
       const [ox, oz] = SET.rock, g = new THREE.BoxGeometry(5.6, 4.0, 3.4, 10, 8, 8), p = g.attributes.position as THREE.BufferAttribute;
       for (let i = 0; i < p.count; i++) {
         const v = V(p.getX(i), p.getY(i), p.getZ(i)), n = v.clone().normalize();
-        v.lerp(n.multiplyScalar(Math.max(2.8 * Math.abs(n.x), 2.0 * Math.abs(n.y), 1.7 * Math.abs(n.z)) + 0.6), 0.4);
-        v.addScalar(0.12 * Math.sin(v.x * 3.1 + v.y * 2.3) * Math.cos(v.z * 2.7));
+        v.lerp(n.multiplyScalar(Math.max(2.8 * Math.abs(n.x), 2.0 * Math.abs(n.y), 1.7 * Math.abs(n.z)) + 0.6), 0.75);
+        v.addScalar(0.22 * Math.sin(v.x * 2.1 + v.y * 1.7) * Math.cos(v.z * 1.9) + 0.08 * Math.sin(v.x * 7.3 + v.z * 5.1));
         if (v.z > 1.3) v.z = 1.3;
         p.setXYZ(i, v.x, v.y, v.z);
       }
@@ -301,7 +307,7 @@ export class World {
       const prof: THREE.Vector2[] = [[0.0, 0], [0.55, 0.02], [0.85, 0.25], [0.95, 0.55], [0.85, 0.85], [0.78, 0.95], [0.88, 1.0], [0.82, 1.04]].map(([r, y]) => new THREE.Vector2(r, y));
       b.add(new THREE.LatheGeometry(prof, 32), copper, M4(ox, 0.38, oz, 1, 0.95, 1));
       b.add(new THREE.CircleGeometry(0.8, 24).rotateX(-Math.PI / 2), col("curry", "#d9902a"), M4(ox, 1.25, oz));
-      const flameM = new THREE.MeshBasicMaterial({ color: new THREE.Color(3.2, 1.4, 0.3), toneMapped: true });
+      const flameM = new THREE.MeshBasicMaterial({ color: new THREE.Color(1.9, 0.62, 0.08), toneMapped: true });
       for (let i = 0; i < 5; i++) { const m = new THREE.Mesh(new THREE.ConeGeometry(0.12, 0.45, 8), flameM); m.position.set(ox + Math.cos(i * 1.26) * 1.0, 0.45, oz + Math.sin(i * 1.26) * 1.0); m.layers.set(NOINK); this.flames.push(m); R.add(m); }
       // the queue path: a dusty track out to the horizon
       for (let i = 1; i < QUEUE.length; i++) {
@@ -375,8 +381,6 @@ export class World {
       b.add(new THREE.CylinderGeometry(0.38, 0.4, 4.5, 20).rotateZ(Math.PI / 2), polished, M4(ox + 3.4, 0.38, oz + 1.6, 1, 1, 1, 0.5));
       b.add(new THREE.CylinderGeometry(0.36, 0.38, 2.5, 20).rotateZ(Math.PI / 2), polished, M4(ox - 3.1, 0.36, oz + 0.8, 1, 1, 1, -0.7));
       ring("ruins", 40, 12, 80, 81, (x, z, i) => tree(x, z, 1 + rnd(i, 3) * 0.6, i));
-      const tuft = new THREE.ConeGeometry(0.12, 0.6, 5);
-      for (let i = 0; i < 260; i++) { const a = rnd(i, 82) * 6.28, r = 1 + rnd(i, 83) * 12; b.add(tuft, leaf[i % 3], M4(ox + Math.cos(a) * r, 0.3, oz + Math.sin(a) * r, 1, 0.7 + rnd(i, 84), 1)); }
     }
 
     // ---- LIONS: the lion capital on a plinth ----
@@ -396,7 +400,7 @@ export class World {
       ring("flag", 40, 16, 80, 101, (x, z, i) => tree(x, z, 1 + rnd(i, 3) * 0.5, i));
       const g = new THREE.PlaneGeometry(3, 2, 30, 12); g.translate(1.5, 0, 0);
       this.flag = new THREE.Mesh(g, twoTone(new THREE.MeshLambertMaterial({ map: flagTex(), side: THREE.DoubleSide })));
-      this.flag.position.set(ox + 0.08, 7.75, oz); this.flag.castShadow = true; this.flag.receiveShadow = true;
+      this.flag.position.set(ox + 0.08, 7.75, oz);
       R.add(this.flag);
     }
     // ---- the rupee note (shot 20), fluttering in front of the lion lawn ----

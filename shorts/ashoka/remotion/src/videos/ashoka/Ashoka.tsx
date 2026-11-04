@@ -44,8 +44,10 @@ const Inner: React.FC<{ id: number }> = ({ id }) => {
   const f = useCurrentFrame();
   const { camera, scene, advance } = useThree();
   // Remotion advances R3F once per frame in its own effect; on this renderer the EffectComposer only draws once it has
-  // been through a re-render after mounting, so render again after every commit of this component.
-  useEffect(() => { advance(performance.now()); });
+  // been through a re-render after mounting, so render again after the first few commits of this component (a still
+  // is always a fresh mount; a sequence render keeps the layer mounted and needs no extra pass after that).
+  const commits = React.useRef(0);
+  useEffect(() => { if (commits.current++ < 3) advance(performance.now()); });
   const world = useMemo(() => { try { return new World(); } catch (e) { console.error("WORLD CTOR", (e as Error).stack); throw e; } }, []);
   const target = useMemo(() => new THREE.Vector3(), []);
   const on = useMemo(toggles, []);
