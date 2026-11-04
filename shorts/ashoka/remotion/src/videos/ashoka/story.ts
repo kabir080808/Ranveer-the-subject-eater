@@ -40,7 +40,7 @@ export const SHOTS: ShotDef[] = [
   { id: 12, a: 1250, b: 1304, light: "day", beat: "luckily", set: "kitchen" },
   { id: 13, a: 1304, b: 1366, light: "day", beat: "peacocks", set: "kitchen" },
   { id: 14, a: 1366, b: 1478, light: "day", beat: "country", set: "country", sunAz: 120 },
-  { id: 15, a: 1478, b: 1594, light: "day", beat: "fridge", set: "fridge" },
+  { id: 15, a: 1478, b: 1594, light: "day", beat: "fridge", set: "fridge", sunAz: 160 },
   { id: 16, a: 1594, b: 1723, light: "day", beat: "pillar", set: "road" },
   { id: 17, a: 1723, b: 1859, light: "day", beat: "works", set: "road" },
   { id: 18, a: 1859, b: 1932, light: "golden", beat: "ruins", set: "ruins" },
@@ -163,7 +163,7 @@ const CAMS: Record<number, Key[]> = {
   ],
   14: [{ f: 1362, s: Z("country", 1362, 0.002, [60, 55, 80], [0, 0, 0], 46) }],
   15: [
-    { f: 1475, s: D("fridge", 1475, 0.0025, [0.6, 1.5, 3.4], [0, 1.45, -1.5], { fov: 40 }) },
+    { f: 1475, s: D("fridge", 1475, 0.0025, [0.2, 1.5, 3.8], [-0.35, 1.4, -1.5], { fov: 42 }) },
     { f: W(CUE.walks) - 8, dur: 26, s: D("fridge", W(CUE.walks) - 8, 0.002, [2.6, 1.55, 4.6], [0, 1.25, -1.2], { fov: 42, roll: 0.03 }) },
   ],
   16: [
@@ -173,9 +173,9 @@ const CAMS: Record<number, Key[]> = {
   ],
   17: [
     { f: 1720, s: D("road", 1720, 0.002, [-10, 3, 6], [-18, 4, -6], { fov: 44 }) },
-    { f: W(CUE.wells) - 6, cut: true, s: D("road", W(CUE.wells), 0.0025, [10, 2.2, -4], [14, 1.0, -9], { fov: 40, roll: 0.03 }) },
+    { f: W(CUE.wells) - 6, cut: true, s: D("road", W(CUE.wells), 0.0025, [10.8, 2.1, -2.6], [15.0, 1.1, -8.6], { fov: 42, roll: 0.03 }) },
     { f: W(CUE.medicine) - 4, cut: true, s: D("road", W(CUE.medicine), 0.0025, [-2.6, 1.6, -9.2], [-5.0, 1.0, -13.5], { fov: 40, roll: -0.03 }) },
-    { f: W(CUE.animals) - 10, dur: 22, s: D("road", W(CUE.animals) - 10, 0.002, [-6.5, 1.5, -9.4], [-8.4, 1.1, -14], { fov: 38, roll: 0.03 }) },
+    { f: W(CUE.animals) - 10, dur: 22, s: D("road", W(CUE.animals) - 10, 0.002, [-5.4, 1.6, -8.6], [-7.9, 1.1, -14], { fov: 40, roll: 0.03 }) },
   ],
   18: [{ f: 1854, s: D("ruins", 1854, 0.002, [6, 1.6, 10], [0, 1.8, 0], { fov: 42 }) }],
   19: [{ f: 1928, s: D("lions", 1928, 0.003, [0.8, 2.6, 4.6], [0, 2.75, 0], { fov: 38, roll: 0.03 }, 0.005, 30) }],

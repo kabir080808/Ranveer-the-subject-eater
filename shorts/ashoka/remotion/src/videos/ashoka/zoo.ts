@@ -134,13 +134,16 @@ export const drawAnimal = (p: Pen, kind: string, o: AnimalOpts = {}) => {
       p.shadedFill(body, c, mul(c, SH), L, 240); p.poly(body, null, 11);
       for (const [x, k] of [[240, 0], [520, 0.5]] as const) leg(p, x, 400, G, 36, c, 18 * s(k));
       p.line([[140, 300], [110, 420]], c, 12, true);
+      p.ell(395, 245, 75, 55, c, 0); p.arc(395, 245, 75, 55, 195, 345, 11); // the zebu hump
+      for (const [x, y, rx, ry] of [[250, 330, 60, 45], [470, 360, 50, 40], [180, 400, 35, 28]] as const) p.ell(x, y, rx, ry, "#a0643a", 0);
       const head: P2[] = [[570, 260], [660, 250], [720, 330], [690, 370], [600, 350]];
       p.poly(head, c, 11);
+      p.poly([[600, 280], [545, 335], [575, 345], [615, 300]], shade(c, 0.85), 8); // droopy ear
       p.stroke([[600, 255], [585, 200], [560, 185]], 12, "#d8cdb0"); p.stroke([[635, 250], [640, 195], [665, 180]], 12, "#d8cdb0");
       p.poly([[590, 275], [540, 290], [585, 305]], shade(c, 0.85), 8);
       p.ell(700, 345, 28, 22, "#e8b4a8", 7);
       eye(p, 640, 300, 14, o.blink ?? 0);
-      if (o.bandage) { p.band([[480, 395], [480, 530]], "#ffffff", 34, 5); p.band([[470, 470], [500, 450]], "#d2343c", 8, 2); }
+      if (o.bandage) { p.band([[520, 470], [520, 550]], "#ffffff", 64, 6); p.band([[492, 512], [548, 500]], "#d2343c", 10, 2); }
       if (o.happy) p.arc(680, 362, 14, 9, 20, 160, 4);
       break;
     }
@@ -151,14 +154,14 @@ const ellPtsZ = (cx: number, cy: number, rx: number, ry: number): P2[] => Array.
 // ---------------- props / effect cards ----------------
 /** lying battle debris: dropped shield, helmet, broken spear (cards laid flat on the grass, 512 x 512) */
 export const fxDebris = (p: Pen, k: number) => {
-  if (k === 0) { p.ell(256, 256, 170, 170, "#b5653f", 14); p.ell(256, 256, 120, 120, null, 8); p.ell(256, 256, 40, 40, "#e8c04a", 8); }
+  if (k === 0) { p.ell(256, 256, 170, 170, "#8a6a4a", 14); p.ell(256, 256, 120, 120, "#a07c56", 8); p.ell(256, 256, 40, 40, "#c9ccd2", 8); }
   else if (k === 1) { p.band([[60, 420], [300, 200]], "#8a5a33", 26, 6, "round"); p.band([[330, 170], [450, 70]], "#8a5a33", 26, 6, "round"); p.poly([[450, 70], [500, 20], [470, 90]], "#c7ccd4", 7); }
   else { p.ell(256, 300, 150, 110, "#8d949c", 12, 180, 360); p.stroke([[106, 300], [406, 300]], 14); p.ell(256, 190, 22, 22, "#d2343c", 7); }
 };
 /** fallen banner on the field (512 x 256, flat) */
 export const fxBanner = (p: Pen) => {
   p.band([[20, 200], [480, 120]], "#7a4b2a", 14, 4, "round");
-  p.poly([[300, 150], [470, 125], [490, 210], [320, 240]], "#e58a2e", 9);
+  p.poly([[300, 150], [470, 125], [490, 210], [320, 240]], "#c9a26a", 9);
 };
 /** stone chips flying off a chisel blow (256 x 256) */
 export const fxChips = (p: Pen, t: number) => {
@@ -169,13 +172,12 @@ export const fxChips = (p: Pen, t: number) => {
 };
 /** dust cloud puff for the battle (512 x 512, soft) */
 export const fxDust = (p: Pen, seed: number) => {
-  const g = p.g;
-  for (let i = 0; i < 9; i++) {
-    const a = seed * 1.7 + i * 2.39, r = 60 + (i % 3) * 50, x = 256 + Math.cos(a) * r * 0.9, y = 300 + Math.sin(a) * r * 0.5 - i * 6;
-    const gr = g.createRadialGradient(x, y, 0, x, y, 120);
-    gr.addColorStop(0, "rgba(214,190,150,0.85)"); gr.addColorStop(0.6, "rgba(214,190,150,0.5)"); gr.addColorStop(1, "rgba(214,190,150,0)");
-    g.fillStyle = gr; g.beginPath(); g.arc(x, y, 120, 0, Math.PI * 2); g.fill();
-  }
+  // the cartoon fight cloud: overlapping inked puffs, outlines first so the cloud reads as one shape
+  const puffs: [number, number, number][] = [];
+  for (let i = 0; i < 9; i++) { const a = seed * 1.7 + i * 2.39, r = 40 + (i % 3) * 45; puffs.push([256 + Math.cos(a) * r * 1.1, 300 + Math.sin(a) * r * 0.55 - (i % 4) * 10, 70 + ((i * 37 + seed * 11) % 40)]); }
+  for (const [x, y, r] of puffs) p.ell(x, y, r, r * 0.85, null, 22);
+  for (const [x, y, r] of puffs) p.ell(x, y, r, r * 0.85, "#e8d6b2", 0);
+  for (const [x, y, r] of puffs) p.ell(x - r * 0.25, y - r * 0.3, r * 0.45, r * 0.3, "#f6ead2", 0);
 };
 /** sweat drop card (128 x 128) */
 export const fxSweat = (p: Pen) => sweat(p, 64, 64, 2.2);
@@ -220,7 +222,8 @@ export const rupeeNote = (g: CanvasRenderingContext2D) => {
   g.fillStyle = gr; g.fillRect(0, 0, W, H);
   g.strokeStyle = "#5c8a6a"; g.lineWidth = 10; g.strokeRect(18, 18, W - 36, H - 36);
   g.lineWidth = 3; for (let i = 0; i < 18; i++) { g.beginPath(); g.arc(780, 256, 30 + i * 9, 0, Math.PI * 2); g.globalAlpha = 0.25; g.stroke(); } g.globalAlpha = 1;
-  lionEmblem(g, 220, 270, 1.0, "#3d6a4e");
+  g.save(); g.translate(60, 110); g.scale(0.34, 0.34); lionsCard(new Pen(g)); g.restore();
+  g.fillStyle = "#8a744e"; g.fillRect(70, 388, 340, 26);
   g.fillStyle = "rgba(61,106,78,0.35)"; for (let i = 0; i < 4; i++) g.fillRect(430, 140 + i * 60, 200 - i * 30, 18);
 };
 /** front view of the lion capital emblem (three visible lions on the abacus with the wheel), drawn in one colour */
@@ -245,9 +248,10 @@ export { INK };
 export const lionsCard = (p: Pen) => {
   const stone = "#e4cfa6", dark = mul(stone, [0.78, 0.74, 0.8]), mane = "#d6bd8e";
   const lion = (cx: number, s: number, face: number) => {
-    // haunches + chest
-    p.poly([[cx - 120 * s, 820], [cx - 135 * s, 600], [cx - 60 * s, 470], [cx + 60 * s, 470], [cx + 135 * s, 600], [cx + 120 * s, 820]], stone, 12);
-    for (const dx of [-55, 55]) p.poly([[cx + dx * s - 22 * s, 820], [cx + dx * s - 24 * s, 650], [cx + dx * s + 24 * s, 650], [cx + dx * s + 22 * s, 820]], dark, 9);
+    // seated body: haunch behind, round chest, two straight front legs with big paws on the abacus
+    p.ell(cx + face * 70 * s, 720, 120 * s, 100 * s, dark, 12);
+    p.ell(cx, 590, 115 * s, 150 * s, stone, 12);
+    for (const dx of [-45, 45]) { p.poly([[cx + dx * s - 24 * s, 790], [cx + dx * s - 26 * s, 600], [cx + dx * s + 26 * s, 600], [cx + dx * s + 24 * s, 790]], stone, 10); p.ell(cx + dx * s, 795, 38 * s, 22 * s, stone, 10); }
     // mane: a ring of flame-like locks
     const pts: P2[] = [];
     for (let i = 0; i <= 28; i++) { const a = rad((360 * i) / 28), r = (i % 2 ? 150 : 175) * s; pts.push([cx + Math.cos(a) * r, 340 + Math.sin(a) * r * 1.05]); }

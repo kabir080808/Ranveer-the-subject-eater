@@ -150,7 +150,7 @@ export class World {
     const banyanLeaf = [col("bleafA", "#4f9a44"), col("bleafB", "#5aa64c")];
     const palmLeaf = col("palm", "#5aa64c");
     const copper = twoTone(new THREE.MeshPhongMaterial({ color: "#e08a45", specular: "#ffd9a8", shininess: 50 }));
-    const white = col("white", "#f2f0ea"), teal = col("roomWall", "#9fd0c8"), counter = col("counter", "#c9a27a");
+    const white = col("white", "#f2f0ea"), teal = col("roomWall", "#f2c79a"), counter = col("counter", "#c9a27a");
     const hillMat = col("hill", "#7fae5a"), farHill = col("farhill", "#8fb06a");
     const crop = [col("cropA", "#a7c95a"), col("cropB", "#e2c24a"), col("cropC", "#7fb84f")];
     const b = new Batch();
@@ -225,7 +225,7 @@ export class World {
       const p = g.attributes.position as THREE.BufferAttribute, uv = g.attributes.uv as THREE.BufferAttribute;
       for (let i = 0; i < p.count; i++) { p.setY(i, hillY(p.getX(i), p.getZ(i)) + 0.02); uv.setXY(i, uv.getX(i) * 11, uv.getY(i) * 11); }
       g.computeVertexNormals(); g.translate(ox, 0, oz); b.add(g, grass);
-      for (const [x, z] of [[-3.2, -2.2], [3.4, -2.0], [-6.5, -5.5], [7, -5]]) {
+      for (const [x, z] of [[-4.5, -7], [3.4, -6.5], [-8, -6], [8, -8]]) {
         const y = hillY(x, z);
         b.add(new THREE.CylinderGeometry(0.06, 0.06, 4.6, 8), wood, M4(ox + x, y + 2.3, oz + z));
         const fl = new THREE.PlaneGeometry(1.4, 0.9); fl.translate(0.7, 0, 0);
@@ -343,7 +343,7 @@ export class World {
       b.add(boxGeo(V(ox + 0.55, 0.9, oz - 2.42), V(ox + 3.45, 0.96, oz - 1.66)), white);
       b.add(boxGeo(V(ox - 3.4, 0, oz - 2.4), V(ox - 0.7, 0.9, oz - 1.7)), counter);
       b.add(boxGeo(V(ox - 3.45, 0.9, oz - 2.42), V(ox - 0.65, 0.96, oz - 1.66)), white);
-      const sticky = new THREE.Mesh(new THREE.PlaneGeometry(0.2, 0.2), new THREE.MeshBasicMaterial({ map: stickyTex(), color: 0xeeeeee }));
+      const sticky = new THREE.Mesh(new THREE.PlaneGeometry(0.3, 0.3), new THREE.MeshBasicMaterial({ map: stickyTex(), color: 0xeeeeee }));
       sticky.position.set(ox - 0.05, 1.45, oz - 1.288); sticky.rotation.z = 0.06; sticky.layers.set(NOINK); R.add(sticky);
       const win = new THREE.Mesh(new THREE.PlaneGeometry(1.6, 1.0), new THREE.MeshBasicMaterial({ color: new THREE.Color("#bfe2ff") }));
       win.position.set(ox + 2.0, 1.9, oz - 2.39); R.add(win);
@@ -399,14 +399,14 @@ export class World {
       b.add(boxGeo(V(ox - 0.7, 0, oz - 0.7), V(ox + 0.7, 0.4, oz + 0.7), 1), sandstone);
       ring("flag", 40, 16, 80, 101, (x, z, i) => tree(x, z, 1 + rnd(i, 3) * 0.5, i));
       const g = new THREE.PlaneGeometry(3, 2, 30, 12); g.translate(1.5, 0, 0);
-      this.flag = new THREE.Mesh(g, twoTone(new THREE.MeshLambertMaterial({ map: flagTex(), side: THREE.DoubleSide })));
+      this.flag = new THREE.Mesh(g, new THREE.MeshBasicMaterial({ map: flagTex(), side: THREE.DoubleSide, color: 0xf0f0f0 }));
       this.flag.position.set(ox + 0.08, 7.75, oz);
       R.add(this.flag);
     }
     // ---- the rupee note (shot 20), fluttering in front of the lion lawn ----
     {
       const g = new THREE.PlaneGeometry(1.2, 0.6, 16, 6);
-      this.note = new THREE.Mesh(g, twoTone(new THREE.MeshLambertMaterial({ map: noteTex(), side: THREE.DoubleSide })));
+      this.note = new THREE.Mesh(g, new THREE.MeshBasicMaterial({ map: noteTex(), side: THREE.DoubleSide, color: 0xf2f2f2 }));
       this.note.position.copy(V(...at("lions", 6, 1.5, -0.4))); this.note.receiveShadow = true;
       R.add(this.note);
     }

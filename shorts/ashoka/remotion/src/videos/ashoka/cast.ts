@@ -364,7 +364,7 @@ export const stage = (id: number, t: number, cam: CamInfo): Stage => {
       for (let k = 0; k < 4 + Math.round(10 * grow); k++) {
         const [x, , z] = at("plain", (hh(k, 8) - 0.5) * 2.2, 0, -19 - k * 2.6);
         const sz = (3 + 2.5 * grow) * (0.8 + 0.4 * hh(k, 9)), wob = 0.15 * Math.sin(t * 9 + k);
-        out.fx.push({ key: `dust${k % 4}`, cw: 512, ch: 512, draw: (p) => fxDust(p, k % 4), x, y: sz * 0.32, z, w: sz * (1 + wob), h: sz * (1 - wob), soft: true });
+        out.fx.push({ key: `dust${k % 4}`, cw: 512, ch: 512, draw: (p) => fxDust(p, k % 4), x, y: sz * 0.32, z, w: sz * (1 + wob), h: sz * (1 - wob) });
         if (k % 3 === 0) { const u = q((t * 2 + hh(k)) % 1, 15); out.fx.push({ key: `burst${u}`, cw: 400, ch: 400, draw: (p) => fxBurst(p, u), x, y: 1.6 + hh(k, 2), z: z + 1.2, w: 1.4, h: 1.4 }); }
       }
       if (t > CUE.bigger - 0.5) for (let i = 0; i < 4; i++) {
@@ -378,7 +378,8 @@ export const stage = (id: number, t: number, cam: CamInfo): Stage => {
       if (s.beat === "conqueror") {
         const [hx, hy, hz] = HERO_FIELD;
         const expr: Expr = before(t, 27.7) ? "stern" : before(t, CUE.sick) ? "sad" : "pained";
-        human(cam, out, t, 1, ASHOKA, "ashoka", hx, hy, hz, { expr });
+        const sick = !before(t, CUE.sick);
+        human(cam, out, t, 1, sick ? { ...ASHOKA, skin: "#b9b779" } : ASHOKA, sick ? "ashokaSick" : "ashoka", hx, hy, hz, { expr: sick ? "nervous" : expr });
         if (!before(t, CUE.sick)) out.fx.push({ key: "sweat", cw: 128, ch: 128, draw: fxSweat, x: hx + 0.32, y: hy + 1.95 - 0.1 * clamp01((t - CUE.sick) * 2), z: hz + 0.2, w: 0.14, h: 0.14 });
       }
       break;
@@ -446,8 +447,8 @@ export const stage = (id: number, t: number, cam: CamInfo): Stage => {
       [[-16, -3], [-17.5, -2.4], [-19, -3.4]].forEach(([x, z], i) => { const [wx, , wz] = R(x, z); human(cam, out, t, 1400 + i, villager(i + 3), `v${(i + 3) % 6}`, wx, 0, wz, { mode: "sit", expr: "smile_closed" }); });
       { const [wx, , wz] = R(-13, -1.2); human(cam, out, t, 1410, villager(4), "v4", wx, 0, wz, { expr: "grin", prop: ["hammer", q(0.5 + 0.5 * Math.sin(t * 6), 8)] }); }
       // the well
-      { const [wx, , wz] = R(13.0, -8.4); human(cam, out, t, 1420, villager(1), "v1", wx, 0, wz, { expr: "smile", wave: q(0.5 + 0.5 * Math.sin(t * 4), 8) }); }
-      { const [wx, , wz] = R(15.2, -8.0); human(cam, out, t, 1421, KID, "kid", wx, 0, wz, { expr: "grin" }); }
+      { const [wx, , wz] = R(15.6, -8.0); human(cam, out, t, 1420, villager(1), "v1", wx, 0, wz, { expr: "smile", wave: q(0.5 + 0.5 * Math.sin(t * 4), 8) }); }
+      { const [wx, , wz] = R(16.5, -9.0); human(cam, out, t, 1421, KID, "kid", wx, 0, wz, { expr: "grin" }); }
       // medicine for people, then for animals
       { const [wx, , wz] = R(-5.4, -13.4); human(cam, out, t, 1430, HEALER, "healer", wx, 0, wz, { expr: "smile" }); }
       { const [wx, , wz] = R(-4.4, -13.0); human(cam, out, t, 1431, villager(5), "v5", wx, 0, wz, { mode: "sit", expr: before(t, 60.6) ? "pained" : "relief" }); }
